@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>高雄垃圾車｜一般垃圾日核對後台</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.5.3/papaparse.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f7f4;color:#23362b;font-family:system-ui,"Microsoft JhengHei",sans-serif;line-height:1.55}header{background:#206d48;color:white;padding:24px 16px;text-align:center}header h1{margin:0;font-size:25px}header p{margin:5px 0 0}main{max-width:1050px;margin:20px auto;background:white;border-radius:12px;padding:20px;box-shadow:0 3px 12px #0000000d}h2{font-size:19px;margin:22px 0 10px}p{margin:8px 0}input,select,button,textarea{font:inherit;font-size:15px;border-radius:7px}input,select,textarea{border:1px solid #b7c9bd;padding:9px;width:100%;background:white}button{border:0;background:#26744f;color:white;padding:10px 15px;font-weight:600;cursor:pointer}button:disabled{background:#a4b0a8;cursor:not-allowed}.outline{background:#e8f2eb;color:#145b37}.danger{color:#9c3c1e}.note{background:#f1f6f2;border-left:4px solid #42865c;padding:12px;border-radius:5px}.warning{background:#fff5e9;border-left-color:#e8a44a}.flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}label{display:block;font-weight:600;margin-bottom:4px}.small{font-size:13px;color:#576b5b}.status{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}.stat{background:#eef6f0;padding:12px;border-radius:8px}.stat strong{display:block;font-size:22px}.tablewrap{max-height:360px;overflow:auto;border:1px solid #d9e4db;border-radius:9px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;text-align:left;border-bottom:1px solid #e4eae5;white-space:nowrap}th{position:sticky;top:0;background:#ebf4ee}tr.selected{background:#e3f2e7}tbody tr{cursor:pointer}tbody tr:hover{background:#f3faf5}.checkline{display:flex;align-items:start;gap:9px;padding:12px;background:#f3f7f4;border-radius:7px}.checkline input{width:auto;margin-top:4px}.buttons{display:flex;flex-wrap:wrap;gap:9px}#validation{min-height:20px}.sep{border:0;border-top:1px solid #e3eae4;margin:20px 0}code{background:#eef3ee;border-radius:4px;padding:2px 5px}a{color:#136c43}input[type=file]{padding:7px}button:focus-visible{outline:3px solid #a3d6b5}#reviewTable td:last-child{color:#526457}@media(max-width:650px){main{margin:9px;padding:13px}.grid,.grid3{grid-template-columns:1fr}header h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header><h1>清運日期核對後台</h1><p>盤點路線 → 官方查證 → 匯出垃圾日對照表</p></header>
+<main>
+<p><a href="official-day-matcher.html">官方一般垃圾日批次比對工具</a></p>
+<div class="note warning">本工具<strong>不會推測一般垃圾日</strong>，也不會直接修改 GitHub。只有你確認官方來源、清運星期及適用範圍後，才會加入匯出結果。原本 <code>garbage-days.csv</code> 的規則會保留。</div>
+<h2>1. 載入資料</h2>
+<div class="grid">
+ <div><label for="inventoryFile">上傳 route-inventory.csv（必要）</label><input id="inventoryFile" type="file" accept=".csv,text/csv"><p class="small">從路線盤點工具下載的清單；同一來源檔案內的不同行政區會分開盤點。</p></div>
+ <div><label for="existingFile">上傳目前的 garbage-days.csv（備用）</label><input id="existingFile" type="file" accept=".csv,text/csv"><p class="small">預設會從網站同一目錄自動讀取；讀取失敗時再手動選檔。</p></div>
+</div>
+<div class="buttons"><button id="loadBtn">讀取並檢查資料</button><button id="resetBtn" class="outline" type="button">清空本頁暫存</button></div>
+<p id="loadStatus" class="note status" role="status">尚未載入。請先選擇路線盤點 CSV。</p>
+<div class="grid3"><div class="stat"><span>盤點組合</span><strong id="statTotal">—</strong></div><div class="stat"><span>目前對照規則</span><strong id="statExisting">—</strong></div><div class="stat"><span>本次新增規則</span><strong id="statNew">0</strong></div></div>
+<h2>2. 選取要核對的路線</h2>
+<div class="grid3">
+ <div><label for="district">行政區</label><select id="district" disabled><option value="">全部行政區</option></select></div>
+ <div><label for="search">關鍵字</label><input id="search" placeholder="來源檔、責任區、車次、地點" disabled></div>
+ <div><label for="state">清單條件</label><select id="state" disabled><option value="all">全部</option><option value="missing">原始無一般垃圾日</option><option value="partial">原始有部分日期</option></select></div>
+</div>
+<p id="listStatus" class="small">請先載入盤點清單。</p>
+<div class="tablewrap"><table><thead><tr><th>行政區</th><th>來源檔案</th><th>責任區</th><th>車次</th><th>筆數</th><th>範例站點</th><th>原有日期筆數</th></tr></thead><tbody id="routeRows"></tbody></table></div>
+<h2>3. 填寫官方核實資料</h2>
+<p id="selectedRoute" class="note">先點選上方路線。</p>
+<form id="ruleForm">
+ <div class="grid">
+  <div><label for="scope">規則適用範圍</label><select id="scope"><option value="stop">只套用精確停靠站（安全預設）</option></select></div>
+  <div><label for="days">一般垃圾清運星期</label><input id="days" placeholder="例如：一、二、四、五、六" required></div>
+  <div><label for="stopPlace">停留地點（精確比對）</label><input id="stopPlace" placeholder="必須與原 CSV 停留地點一致"></div>
+  <div><label for="stopTime">完整停留時間（必填）</label><input id="stopTime" required placeholder="例如：17:00 或 17:00~17:02"></div>
+  <div class="fieldwide" style="grid-column:1/-1"><label for="source">官方來源網址（必填）</label><input id="source" type="url" placeholder="https://..." required></div>
+ </div>
+ <p class="small" id="scopeHint">站點模式：請填入原始 CSV 的完整停留地點；必須填寫原始 CSV 完整停留時間；到點時間不能代替完整時段。</p>
+ <label class="checkline"><input id="verified" type="checkbox"><span>我已在官方來源核對<strong>一般垃圾清運日期</strong>，並確認這些星期適用於上述完整五欄停靠紀錄；不是從資源回收日推測。</span></label>
+ <div class="buttons"><button id="addBtn" type="submit" disabled>加入本次核實規則</button><button id="clearFormBtn" class="outline" type="button">清空填寫內容</button></div>
+ <p id="validation" class="status" aria-live="polite"></p>
+</form>
+<h2>4. 檢查新增規則並匯出</h2>
+<div class="tablewrap"><table id="reviewTable"><thead><tr><th>來源檔</th><th>責任區</th><th>車次</th><th>適用範圍</th><th>一般垃圾日</th><th>動作</th></tr></thead><tbody id="reviewRows"></tbody></table></div>
+<p class="small">輸出會保留既有規則、加入新規則並檢查重複及衝突。若已存在相同條件但日期不同，必須先回去查證，不會覆蓋。</p>
+<div class="buttons"><button id="exportBtn" disabled>下載更新後 garbage-days.csv</button><button id="downloadWorkBtn" class="outline" disabled>備份本次核實規則 CSV</button></div>
+<p id="exportStatus" class="status"></p>
+<hr class="sep"><p class="small">提醒：盤點清單只有各路線的「範例停靠地點」，並不代表整條路線只有那一站。需要精確站點名稱時請開啟對應的原始 CSV 核對。此工具不會保存填寫狀態，離開頁面前請下載備份。</p>
+</main>
+<script src="js/route-files.js"></script>
+<script src="js/data-core.js"></script>
+<script src="js/garbage-day-review.js"></script>
+</body>
+</html>

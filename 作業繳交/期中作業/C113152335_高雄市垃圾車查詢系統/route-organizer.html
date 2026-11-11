@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>高雄市垃圾車 — 清運日對照表自動整理工具</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.5.3/papaparse.min.js"></script>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,"Microsoft JhengHei",sans-serif;background:#f3f7f4;color:#243c2e;margin:0;line-height:1.65}
+header{background:#226d49;color:white;padding:28px 18px;text-align:center}main{max-width:850px;margin:24px auto;background:white;padding:25px;border-radius:14px}
+button{padding:11px 18px;background:#21784d;border:0;color:white;border-radius:8px;font-size:16px;cursor:pointer;margin:5px}button:disabled{opacity:.5;cursor:not-allowed}
+#message{background:#f1f5f3;padding:15px;border-radius:8px;white-space:pre-wrap}.tip{color:#596f60;font-size:14px}.buttons{display:flex;flex-wrap:wrap;gap:8px}
+table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid #e2eae4;padding:9px;text-align:left}th{background:#f0f5f1}
+@media(max-width:650px){main{margin:12px;padding:16px}}
+</style>
+</head><body>
+<header><h1>垃圾車清運日對照表整理工具</h1><p>自動盤點 39 份 CSV，區分已確認日期與待查證路線</p></header>
+<main>
+<p><a href="official-day-matcher.html">官方一般垃圾日批次比對工具</a></p>
+<p>請把本頁 <code>route-organizer.html</code> 上傳到同一個 GitHub 儲存庫，使用 GitHub Pages 開啟後，按下開始整理。</p>
+<div class="buttons"><button id="start">讀取並整理 39 份 CSV</button><button id="downloadMap" disabled>下載垃圾日對照表</button><button id="downloadInventory" disabled>下載路線盤點清單</button></div>
+<p id="message" role="status">尚未開始。程式不會修改原始 CSV，也不會自動寫入 GitHub。</p>
+<h2>整理方式</h2>
+<ul><li>如果原始 CSV 已有「一般垃圾日」及可核對的 HTTPS「官方來源」，會建立<strong>停靠站層級</strong>的精確對照規則。</li><li>保留原本 <code>garbage-days.csv</code> 的有效規則；遇到日期衝突或載入失敗會停止整份對照表匯出，避免遺失已確認規則。</li><li>其餘路線只放進「路線盤點清單」，一般垃圾日留空，等待你核對後填入。</li></ul>
+<p class="tip">提醒：一般垃圾清運日不等於資源回收日；不能把既有「回收日」直接填入新對照表。相同責任區和車次也可能有不同停靠日期。</p>
+<table><thead><tr><th>輸出檔案</th><th>用途</th></tr></thead><tbody><tr><td>garbage-days-generated.csv</td><td>有來源證據、可供網站使用的規則（下載後檢查，再改名為 garbage-days.csv）</td></tr><tr><td>route-inventory.csv</td><td>每條來源檔案／責任區／車次組合的筆數、樣本停靠站、待核對狀態</td></tr></tbody></table>
+</main>
+<script src="js/route-files.js"></script>
+<script src="js/data-core.js"></script>
+<script src="js/route-organizer.js"></script>
+</body></html>
